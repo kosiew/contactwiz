@@ -248,6 +248,23 @@ private struct ActionBar: View {
             }
         }
         .padding(12)
+        .alert("vCard saved", isPresented: Binding(
+            get: { model.savedVCardURL != nil },
+            set: { if !$0 { model.savedVCardURL = nil } }
+        ), presenting: model.savedVCardURL) { _ in
+            Button("Open Google Contacts") { model.openGoogleContactsForImport() }
+            Button("Show in Finder") { model.revealSavedVCard() }
+            Button("Done", role: .cancel) {}
+        } message: { url in
+            Text("""
+                To add it to Google Contacts:
+                1. Open contacts.google.com.
+                2. Click Import in the left sidebar, then Select file.
+                3. Choose “\(url.lastPathComponent)” and click Import.
+
+                Open Google Contacts also copies the file's path. In the file picker, press ⇧⌘G and paste it (⌘V).
+                """)
+        }
     }
 
     @ViewBuilder private var statusLine: some View {
@@ -259,8 +276,8 @@ private struct ActionBar: View {
             let detail = extraction.fallbackReason.map { " — \($0)" } ?? ""
             Label("Extracted with \(extraction.method.rawValue)\(detail). Review the fields, then save.", systemImage: icon)
                 .font(.caption).foregroundStyle(.secondary)
-        } else {
-            Text(model.googleSignedIn ? "Google: \(model.googleAccount ?? "signed in")" : "Not signed in to Google")
+        } else if model.googleSignedIn {
+            Text("Google: \(model.googleAccount ?? "signed in")")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }

@@ -14,6 +14,8 @@ final class AppModel: ObservableObject {
     @Published var extraction: ExtractionResult?
     @Published var errorMessage: String?
     @Published var statusMessage: String?
+    /// Set after a successful save; drives the "how to import" dialog.
+    @Published var savedVCardURL: URL?
 
     @Published var isSigningIn = false
     @Published var isCreatingInGoogle = false
@@ -302,9 +304,24 @@ final class AppModel: ObservableObject {
         do {
             try vCard.write(to: url, atomically: true, encoding: .utf8)
             statusMessage = "Saved \(url.lastPathComponent)."
+            savedVCardURL = url
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    /// Opens Google Contacts with the saved file's path on the clipboard, ready
+    /// to paste into the Import file picker via ⇧⌘G.
+    func openGoogleContactsForImport() {
+        if let url = savedVCardURL {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(url.path, forType: .string)
+        }
+        NSWorkspace.shared.open(URL(string: "https://contacts.google.com/")!)
+    }
+
+    func revealSavedVCard() {
+        if let url = savedVCardURL { NSWorkspace.shared.activateFileViewerSelecting([url]) }
     }
 
     func copyVCard() {
