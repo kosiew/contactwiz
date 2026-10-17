@@ -3,6 +3,8 @@
 A macOS app that turns a screenshot of contact details (business card, email
 signature, profile page…) into a contact in **Google Contacts**.
 
+![ContactWiz extracting a business card](docs/screenshot.png)
+
 1. **Drop, open, paste (⇧⌘V) or capture (⇧⌘R)** a screenshot.
 2. Text is read on-device with the Vision framework.
 3. Fields are extracted with **Apple Intelligence (Foundation Models)**, using
@@ -43,6 +45,8 @@ Google Contacts**, a setup guide opens with links to each Cloud Console page:
    Google**, and the contact you were adding is created.
 
 You can reopen the guide later from **Settings (⌘,) → Setup Guide…**.
+
+<img src="docs/setup-guide.png" alt="Google setup guide" width="560">
 
 Sign-in uses the desktop loopback flow with PKCE. The refresh token and client
 secret are stored in your Keychain. While the consent screen is in "Testing",
