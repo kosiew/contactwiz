@@ -31,15 +31,18 @@ Or run directly: `swift run ContactWiz`.
 
 ## Google setup (one time)
 
-Creating contacts needs your own OAuth client:
+Creating contacts needs your own OAuth client. The first time you click **Add to
+Google Contacts**, a setup guide opens with links to each Cloud Console page:
 
-1. In [Google Cloud Console](https://console.cloud.google.com/), create a project and
-   enable the **People API**.
-2. Configure the **OAuth consent screen** (External, Testing) and add your Google
-   account as a test user.
-3. **Credentials → Create credentials → OAuth client ID → Desktop app.**
-4. In ContactWiz → **Settings (⌘,)**, paste the client ID and secret, then click
-   **Sign In with Google**.
+1. Create a project.
+2. Enable the **People API**.
+3. Set up the consent screen (External), and add your Google account as a test user.
+4. Create an OAuth client of type **Desktop app**, then click **Download JSON**.
+5. Import the `client_secret_….json` file. ContactWiz finds it in Downloads
+   automatically; you can also drop it or choose it. Then click **Sign In with
+   Google**, and the contact you were adding is created.
+
+You can reopen the guide later from **Settings (⌘,) → Setup Guide…**.
 
 Sign-in uses the desktop loopback flow with PKCE. The refresh token and client
 secret are stored in your Keychain. While the consent screen is in "Testing",

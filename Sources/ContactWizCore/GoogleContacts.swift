@@ -13,6 +13,7 @@ public final class GoogleContacts: @unchecked Sendable {
         case authorizationDenied(String)
         case stateMismatch
         case http(Int, String)
+        case invalidClientFile(String)
 
         public var errorDescription: String? {
             switch self {
@@ -21,6 +22,7 @@ public final class GoogleContacts: @unchecked Sendable {
             case .authorizationDenied(let reason): "Google sign-in was not completed (\(reason))."
             case .stateMismatch: "Google sign-in response did not match the request."
             case .http(let status, let body): "Google returned HTTP \(status): \(body)"
+            case .invalidClientFile(let reason): reason
             }
         }
     }
@@ -63,6 +65,27 @@ public final class GoogleContacts: @unchecked Sendable {
     }
 
     public var isConfigured: Bool { !clientID.isEmpty && !clientSecret.isEmpty }
+
+    public struct ClientCredentials: Equatable, Sendable {
+        public var clientID: String
+        public var clientSecret: String
+    }
+
+    /// Parses the `client_secret_….json` file Google Cloud Console offers
+    /// for download after creating an OAuth client.
+    public static func parseClientSecretFile(_ data: Data) throws -> ClientCredentials {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw Failure.invalidClientFile("That file isn't a Google OAuth client JSON file.")
+        }
+        if json["web"] != nil {
+            throw Failure.invalidClientFile("That's a “Web application” client. Create a “Desktop app” client instead.")
+        }
+        guard let installed = json["installed"] as? [String: Any],
+              let id = (installed["client_id"] as? String)?.trimmed, !id.isEmpty,
+              let secret = (installed["client_secret"] as? String)?.trimmed, !secret.isEmpty
+        else { throw Failure.invalidClientFile("That file doesn't contain a Desktop app client ID and secret.") }
+        return ClientCredentials(clientID: id, clientSecret: secret)
+    }
     public var isSignedIn: Bool { Keychain.read(Key.refreshToken) != nil }
     public var accountEmail: String? { UserDefaults.standard.string(forKey: Key.accountEmail) }
 

@@ -18,11 +18,8 @@ struct SettingsView: View {
                 TextField("Client ID", text: $model.draftClientID)
                 SecureField("Client secret", text: $model.draftClientSecret)
                 HStack {
-                    Button("Save") {
-                        model.google.clientID = model.draftClientID
-                        model.google.clientSecret = model.draftClientSecret
-                        model.refreshGoogleState()
-                    }
+                    Button("Import JSON…") { model.chooseClientFile() }
+                    Button("Save") { model.saveDraftCredentials() }
                     .disabled(model.draftClientID == model.google.clientID && model.draftClientSecret == model.google.clientSecret)
                     Spacer()
                     if model.googleSignedIn {
@@ -43,12 +40,14 @@ struct SettingsView: View {
             } header: {
                 Text("Google Contacts")
             } footer: {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("One-time setup in Google Cloud Console:")
-                    Text("1. Create a project and enable the **People API**.")
-                    Text("2. Configure the OAuth consent screen and add yourself as a test user.")
-                    Text("3. Credentials → Create OAuth client ID → **Desktop app**. Paste its ID and secret here.")
-                    Link("Open Google Cloud Console", destination: URL(string: "https://console.cloud.google.com/apis/credentials")!)
+                HStack {
+                    if let error = model.setupError {
+                        Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                    } else {
+                        Text("Needs a Desktop app OAuth client from Google Cloud Console.")
+                    }
+                    Spacer()
+                    Button("Setup Guide…") { model.presentGoogleSetup() }
                 }
                 .font(.caption).foregroundStyle(.secondary)
             }

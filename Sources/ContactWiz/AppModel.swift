@@ -21,11 +21,17 @@ final class AppModel: ObservableObject {
     @Published var googleSignedIn = false
     @Published var lastCreatedURL: URL?
 
+    @Published var showGoogleSetup = false
+    @Published var setupError: String?
+    @Published var foundClientFile: URL?
+    private var addAfterSetup = false
+
     // View state kept here because `@State` is a macro in this SDK and the
     // Command Line Tools don't ship the SwiftUI macro plugin.
     @Published var isDropTargeted = false
     @Published var showRecognizedText = false
     @Published var showMoreNameFields = false
+    @Published var showManualCredentials = false
     @Published var draftClientID = GoogleContacts.shared.clientID
     @Published var draftClientSecret = GoogleContacts.shared.clientSecret
 
@@ -154,10 +160,10 @@ final class AppModel: ObservableObject {
 
     // MARK: Output
 
-    func addToGoogleContacts(openSettings: () -> Void) {
+    func addToGoogleContacts() {
         guard google.isConfigured else {
-            errorMessage = "Set up your Google OAuth client in Settings to add contacts to Google."
-            openSettings()
+            addAfterSetup = true
+            presentGoogleSetup()
             return
         }
         Task {
@@ -176,6 +182,86 @@ final class AppModel: ObservableObject {
             }
             refreshGoogleState()
         }
+    }
+
+    // MARK: Google setup
+
+    func presentGoogleSetup() {
+        setupError = nil
+        draftClientID = google.clientID
+        draftClientSecret = google.clientSecret
+        scanDownloadsForClientFile()
+        showGoogleSetup = true
+    }
+
+    /// Looks for the most recent `client_secret_….json` that Cloud Console downloads.
+    func scanDownloadsForClientFile() {
+        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+        let keys: [URLResourceKey] = [.contentModificationDateKey]
+        let files = downloads.flatMap {
+            try? FileManager.default.contentsOfDirectory(at: $0, includingPropertiesForKeys: keys, options: .skipsHiddenFiles)
+        } ?? []
+        foundClientFile = files
+            .filter { $0.lastPathComponent.hasPrefix("client_secret") && $0.pathExtension == "json" }
+            .max { modificationDate($0) < modificationDate($1) }
+    }
+
+    private func modificationDate(_ url: URL) -> Date {
+        (try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+    }
+
+    func chooseClientFile() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.directoryURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+        panel.message = "Choose the client_secret….json file you downloaded from Google Cloud Console"
+        if panel.runModal() == .OK, let url = panel.url { importClientFile(url) }
+    }
+
+    func importClientFile(_ url: URL) {
+        do {
+            let credentials = try GoogleContacts.parseClientSecretFile(Data(contentsOf: url))
+            google.clientID = credentials.clientID
+            google.clientSecret = credentials.clientSecret
+            draftClientID = credentials.clientID
+            draftClientSecret = credentials.clientSecret
+            setupError = nil
+        } catch {
+            setupError = error.localizedDescription
+        }
+    }
+
+    func handleClientFileDrop(_ providers: [NSItemProvider]) -> Bool {
+        guard let provider = providers.first, provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) else { return false }
+        _ = provider.loadDataRepresentation(for: .fileURL) { data, _ in
+            guard let data, let url = URL(dataRepresentation: data, relativeTo: nil) else { return }
+            Task { @MainActor in self.importClientFile(url) }
+        }
+        return true
+    }
+
+    func saveDraftCredentials() {
+        google.clientID = draftClientID
+        google.clientSecret = draftClientSecret
+        refreshGoogleState()
+    }
+
+    /// Final step of the setup sheet: sign in, then finish the add that prompted setup.
+    func completeGoogleSetup() {
+        saveDraftCredentials()
+        guard google.isConfigured else { return }
+        showGoogleSetup = false
+        if addAfterSetup {
+            addAfterSetup = false
+            addToGoogleContacts()
+        } else if !google.isSignedIn {
+            signInFromSettings()
+        }
+    }
+
+    func cancelGoogleSetup() {
+        addAfterSetup = false
+        showGoogleSetup = false
     }
 
     func signIn() async throws {

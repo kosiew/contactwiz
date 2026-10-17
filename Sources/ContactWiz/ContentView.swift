@@ -3,7 +3,6 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var model: AppModel
-    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         HSplitView {
@@ -12,7 +11,7 @@ struct ContentView: View {
             VStack(spacing: 0) {
                 ContactForm(contact: $model.contact, showMoreName: $model.showMoreNameFields)
                 Divider()
-                ActionBar(model: model, openSettings: { openSettings() })
+                ActionBar(model: model)
             }
             .frame(minWidth: 460)
         }
@@ -30,6 +29,9 @@ struct ContentView: View {
                 Button { model.clear() } label: { Label("Clear", systemImage: "trash") }
                     .disabled(model.image == nil && model.contact.isEmpty)
             }
+        }
+        .sheet(isPresented: $model.showGoogleSetup) {
+            GoogleSetupView(model: model)
         }
         .alert("ContactWiz", isPresented: Binding(
             get: { model.errorMessage != nil },
@@ -210,7 +212,6 @@ private struct AddButton: View {
 
 private struct ActionBar: View {
     @ObservedObject var model: AppModel
-    let openSettings: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -236,7 +237,7 @@ private struct ActionBar: View {
                     ProgressView().controlSize(.small)
                 }
                 Button {
-                    model.addToGoogleContacts(openSettings: openSettings)
+                    model.addToGoogleContacts()
                 } label: {
                     Label("Add to Google Contacts", systemImage: "person.crop.circle.badge.plus")
                 }

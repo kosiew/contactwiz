@@ -108,6 +108,13 @@ enum GoogleContactsTests {
         expect(body["addresses"] == nil)
     }
 
+    static func parsesDesktopClientFile() {
+        let file = #"{"installed":{"client_id":"123.apps.googleusercontent.com","client_secret":"GOCSPX-x","redirect_uris":["http://localhost"]}}"#
+        let credentials = try? GoogleContacts.parseClientSecretFile(Data(file.utf8))
+        expect(credentials == .init(clientID: "123.apps.googleusercontent.com", clientSecret: "GOCSPX-x"))
+        expect((try? GoogleContacts.parseClientSecretFile(Data(#"{"web":{"client_id":"a","client_secret":"b"}}"#.utf8))) == nil)
+    }
+
     static func emailFromIDToken() {
         let payload = Data(#"{"email":"me@example.com"}"#.utf8).base64URLEncoded
         expect(GoogleContacts.email(fromIDToken: "x.\(payload).y") == "me@example.com")
@@ -159,6 +166,7 @@ let checks: [(String, () -> Void)] = [
     ("VCardWriterTests.writesEscapedCRLFCard", VCardWriterTests.writesEscapedCRLFCard),
     ("VCardWriterTests.foldsLongLinesWithoutSplittingCharacters", VCardWriterTests.foldsLongLinesWithoutSplittingCharacters),
     ("GoogleContactsTests.peopleAPIBody", GoogleContactsTests.peopleAPIBody),
+    ("GoogleContactsTests.parsesDesktopClientFile", GoogleContactsTests.parsesDesktopClientFile),
     ("GoogleContactsTests.emailFromIDToken", GoogleContactsTests.emailFromIDToken),
     ("GoogleContactsTests.loopbackQueryParsing", GoogleContactsTests.loopbackQueryParsing),
     ("MergeTests.dropsUngroundedModelValuesAndBackfills", MergeTests.dropsUngroundedModelValuesAndBackfills),
