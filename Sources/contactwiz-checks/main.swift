@@ -144,6 +144,16 @@ enum MergeTests {
         expect(merged.emails.map(\.value) == ["jane@acme.com"])
         expect(merged.organization == "Acme")
     }
+
+    static func dropsMiddleNameRepeatingSurname() {
+        var model = Contact()
+        model.givenName = "Nor Zamielia"
+        model.middleName = "Zainuddin"
+        model.familyName = "Zainuddin"
+        let merged = ContactExtractor.merge(model: model, heuristic: Contact(), sourceText: "Nor Zamielia Zainuddin")
+        expect(merged.fullName == "Nor Zamielia Zainuddin")
+        expect(merged.middleName.isEmpty)
+    }
 }
 
 // MARK: - Runner
@@ -170,6 +180,7 @@ let checks: [(String, () -> Void)] = [
     ("GoogleContactsTests.emailFromIDToken", GoogleContactsTests.emailFromIDToken),
     ("GoogleContactsTests.loopbackQueryParsing", GoogleContactsTests.loopbackQueryParsing),
     ("MergeTests.dropsUngroundedModelValuesAndBackfills", MergeTests.dropsUngroundedModelValuesAndBackfills),
+    ("MergeTests.dropsMiddleNameRepeatingSurname", MergeTests.dropsMiddleNameRepeatingSurname),
 ]
 
 for (name, check) in checks {

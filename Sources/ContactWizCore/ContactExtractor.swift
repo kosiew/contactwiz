@@ -79,6 +79,11 @@ public enum ContactExtractor {
         result.middleName = nameSource.middleName
         result.familyName = nameSource.familyName
         result.nameSuffix = nameSource.nameSuffix
+        // The model sometimes repeats the surname as a middle name ("Nor Zamielia Zainuddin Zainuddin").
+        let otherNames = Set([result.givenName, result.familyName].flatMap { $0.lowercased().split(separator: " ").map(String.init) })
+        result.middleName = result.middleName.split(separator: " ")
+            .filter { !otherNames.contains($0.lowercased()) }
+            .joined(separator: " ")
         result.organization = pick(model.organization, heuristic.organization)
         result.jobTitle = pick(model.jobTitle, heuristic.jobTitle)
 
