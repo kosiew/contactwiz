@@ -218,7 +218,6 @@ private struct ActionBar: View {
             statusLine
             HStack {
                 Menu("Export") {
-                    Button("Save vCard (.vcf)…") { model.saveVCard() }
                     Button("Copy vCard") { model.copyVCard() }
                     Button("Open in Apple Contacts") { model.openInAppleContacts() }
                 }
@@ -236,14 +235,16 @@ private struct ActionBar: View {
                 } else if model.isCreatingInGoogle {
                     ProgressView().controlSize(.small)
                 }
+                // "Add to Google Contacts" is hidden for now; the Google flow
+                // (AppModel.addToGoogleContacts) is still wired up behind it.
                 Button {
-                    model.addToGoogleContacts()
+                    model.saveVCard()
                 } label: {
-                    Label("Add to Google Contacts", systemImage: "person.crop.circle.badge.plus")
+                    Label("Save vCard…", systemImage: "square.and.arrow.down")
                 }
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.return, modifiers: .command)
-                .disabled(model.contact.isEmpty || model.isProcessing || model.isSigningIn || model.isCreatingInGoogle)
+                .disabled(model.contact.isEmpty || model.isProcessing)
             }
         }
         .padding(12)
@@ -256,7 +257,7 @@ private struct ActionBar: View {
         } else if let extraction = model.extraction {
             let icon = extraction.method == .foundationModel ? "apple.intelligence" : "text.viewfinder"
             let detail = extraction.fallbackReason.map { " — \($0)" } ?? ""
-            Label("Extracted with \(extraction.method.rawValue)\(detail). Review the fields, then add.", systemImage: icon)
+            Label("Extracted with \(extraction.method.rawValue)\(detail). Review the fields, then save.", systemImage: icon)
                 .font(.caption).foregroundStyle(.secondary)
         } else {
             Text(model.googleSignedIn ? "Google: \(model.googleAccount ?? "signed in")" : "Not signed in to Google")

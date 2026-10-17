@@ -12,12 +12,10 @@ signature, profile page…) into a contact in **Google Contacts**.
    detectors and name tagging) fills gaps, and also drops any phone, email or
    URL the model returns that isn't actually in the screenshot. On Macs without
    Apple Intelligence, the rules alone are used.
-4. Review and edit the fields, then click **Add to Google Contacts** (⌘↩). The
-   contact is created through the People API, and its page opens in your
-   browser, ready to edit.
+4. Review and edit the fields, then click **Save vCard…** (⌘↩). Import the
+   `.vcf` file at [contacts.google.com](https://contacts.google.com) → Import.
 
-Offline alternatives: **Export → Save vCard (.vcf)** (import it at
-contacts.google.com → Import), **Copy vCard**, or **Open in Apple Contacts**.
+The **Export** menu also has **Copy vCard** and **Open in Apple Contacts**.
 
 ## Build
 
@@ -33,8 +31,12 @@ Or run directly: `swift run ContactWiz`.
 
 ## Google setup (one time)
 
-Creating contacts needs your own OAuth client. The first time you click **Add to
-Google Contacts**, a setup guide opens with links to each Cloud Console page:
+> The **Add to Google Contacts** button is hidden for now. The Google code is
+> still in place: sign in from Settings, and `contactwiz-cli --google` can create
+> contacts directly.
+
+Creating contacts directly needs your own OAuth client. **Settings (⌘,) → Setup
+Guide…** opens a guide with links to each Cloud Console page:
 
 1. Create a project.
 2. Enable the **People API**.
@@ -42,9 +44,7 @@ Google Contacts**, a setup guide opens with links to each Cloud Console page:
 4. Create an OAuth client of type **Desktop app**, then click **Download JSON**.
 5. Import the `client_secret_….json` file. ContactWiz finds it in Downloads
    automatically; you can also drop it or choose it. Then click **Sign In with
-   Google**, and the contact you were adding is created.
-
-You can reopen the guide later from **Settings (⌘,) → Setup Guide…**.
+   Google**.
 
 <img src="docs/setup-guide.png" alt="Google setup guide" width="560">
 
