@@ -81,3 +81,7 @@ swift run contactwiz-checks
 Build notes: the Command Line Tools also lack the `@Generable` and SwiftUI
 `@State` macro plugins. That's why the model schema is a
 `DynamicGenerationSchema` and view state lives in `AppModel`.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
