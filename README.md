@@ -24,6 +24,7 @@ the Command Line Tools are enough.
 
 ```sh
 scripts/build-app.sh          # → build/ContactWiz.app
+scripts/install_app.sh        # builds it and installs it to /Applications
 open build/ContactWiz.app
 ```
 
